@@ -1,0 +1,32 @@
+rm(list=ls())
+options(warn=1)
+options(stringsAsFactors=FALSE)
+options(digits=15)
+require(stringr)
+require(magrittr)
+require(ggplot2)
+require(tidyr)
+require(Hmisc)
+require(npreg)
+require(readxl)
+require(dplyr)
+require(data.table)
+require(ComplexHeatmap)
+require(ggpubr)
+require(circlize)
+# modify to you local path for it to work
+comp="/Users/yuewu/"
+pardir=paste0(comp,"Library/CloudStorage/Box-Box/Yue Wu's Files/cgm_meal_project/");
+resdir=paste0(pardir,"result/cgm_meal/")
+setwd(resdir)
+# 
+qctab=read.table("qcheatmap.txt",header=TRUE,sep=",")
+qcmat=as.matrix(qctab[,-1])
+rownames(qcmat)=qctab[,1]
+colnames(qcmat)<-colnames(qcmat)%>%str_remove(string=.,pattern="^X")
+qcmat=qcmat[,order(qcmat[1,],decreasing=FALSE)]
+col_fun=colorRamp2(c(0,max(qcmat,na.rm=TRUE)),c("white","red"))
+h_qc=Heatmap(qcmat,name="qc",cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun)#
+pdf(paste0("heatmap_qc.pdf"))
+draw(h_qc,main_heatmap="qc")
+dev.off()

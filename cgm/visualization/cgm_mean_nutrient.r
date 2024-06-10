@@ -1,0 +1,69 @@
+rm(list=ls())
+options(warn=1)
+options(stringsAsFactors=FALSE)
+options(digits=15)
+require(stringr)
+require(magrittr)
+require(ggplot2)
+require(tidyr)
+require(readxl)
+require(dplyr)
+require(data.table)
+require(reshape2)
+require(psych)
+require(ComplexHeatmap)
+# 
+comp="/Users/yuewu/"
+pardir=paste0(comp,"Library/CloudStorage/Box-Box/Yue Wu's Files/cgm_meal_project/");
+resdir=paste0(pardir,"result/cgm_meal/")
+data_pre=paste0(pardir,"data/")
+setwd(resdir)
+# 
+cgmfeature=read.table(paste0(pardir,"result/cgm_meal/cgm_foods_manual_features.csv"),header=TRUE,sep=",")
+nutri_tab=read.table(paste0(data_pre,"carb_nutrient.txt"),header=TRUE,sep="\t")
+colnames(nutri_tab)[1]="foods"
+selec_foods=nutri_tab[,"foods"]
+# mean values for each carb
+cgmfeature=cgmfeature[,c("foods","AUC_above_baseline","peak_value","time_to_peak","baseline_glucose")]
+cgmfeature$peak_relative=cgmfeature$peak_value-cgmfeature$baseline_glucose
+cgmfeature_sele<-cgmfeature[,c("foods","AUC_above_baseline","peak_relative","time_to_peak")]%>%group_by(foods)%>%summarize(across(where(is.numeric),list(mean),.names="{.col}"))%>%as.data.frame()
+cgmfeature_sele=cgmfeature_sele[cgmfeature_sele[,"foods"]%in%selec_foods,]
+tabmerg=merge(nutri_tab,cgmfeature_sele,by="foods")
+# 
+features=colnames(cgmfeature_sele)[-1]
+nutri_comp=colnames(nutri_tab)[c(-1,-2)]
+corr_mat=matrix(NA,nrow=length(features),ncol=length(nutri_comp))
+colnames(corr_mat)=nutri_comp
+rownames(corr_mat)=features
+p_mat=corr_mat
+for(feat in features){
+    for(compo in nutri_comp){
+        if(compo!="type"){
+            corres=cor.test(x=tabmerg[,feat],y=tabmerg[,compo],method="spearman")
+            corr_mat[feat,compo]=corres$estimate
+            p_mat[feat,compo]=corres$p.value
+        }else{
+            locdf=tabmerg[,c(feat,compo)]
+            colnames(locdf)=c("y","type")
+            lmodel=lm(y~type,data=locdf)
+            corr_mat[feat,compo]=sqrt(summary(lmodel)$r.squared)
+            p_mat[feat,compo]=summary(lmodel)$coefficients[2,"Pr(>|t|)"]
+        }
+    }
+}
+colnames(corr_mat)[length(nutri_comp)]="type_starch"
+pdf("heatmap_feature_nutrient.pdf")
+print(Heatmap(corr_mat,cluster_rows=FALSE,cluster_columns=FALSE,
+cell_fun=function(j,i,x,y,w,h,fill){
+            if(p_mat[i,j]<0.05){
+                grid.text("*",x,y)
+            }
+        }))
+dev.off()
+# 
+pvec=c(p_mat)
+padjvec=p.adjust(pvec,method="fdr")
+dim(padjvec)=dim(p_mat)
+rownames(padjvec)=rownames(p_mat)
+colnames(padjvec)=colnames(p_mat)
+save(padjvec,p_mat,corr_mat,file="nutri_cor_foodmeanspike.RData")
