@@ -16,7 +16,7 @@ grouplist={'a1c_t2d_status_bl','sspg_status_heyjun','di_3classes_heyjun','ie_3_c
 metadata=metadata(:,['study_id',grouplist]);
 metadata{:,'study_id'}=strip(strrep(metadata{:,'study_id'},'STUDYID-',''),'left','0');
 for groupfeat=grouplist
-    metadata(strcmp(metadata{:,groupfeat},'Unknown'),:)={'NA'};
+    metadata(strcmp(metadata{:,groupfeat},'Unknown'),groupfeat)={'NA'};
 end
 % merge groups to improve sample size
 metadata{strcmp(metadata{:,'a1c_t2d_status_bl'},'T2D'),'a1c_t2d_status_bl'}={'preDM'};
