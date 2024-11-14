@@ -109,7 +109,7 @@ tabstat_list<-foreach(rowi=seq(nrow(mergtab_sele)),.packages=c("mediation"),.opt
     md_model=mediate(mediator_lm,outcome_lm,treat="microbiome",mediator="metabolite")
     modelsumr=summary(md_model)
     # plot(md_model)
-    data.frame(microbiomes=locrecrd[,"microbiome"],metabolites=locrecrd[,"metabolites"],outcome=locrecrd[,"outcome"],mediationeffect=modelsumr$d0,mediationeffect_p=modelsumr$d0.p,directeffect=modelsumr$z0,directeffect_p=modelsumr$z0.p,proportion=modelsumr$n0,proportion_p=modelsumr$n0.p,step1coef=summary(mediator_lm)$coefficients["microbiome","Estimate"],step2coef=summary(outcome_lm)$coefficients["metabolite","Estimate"])
+    data.frame(microbiomes=locrecrd[,"microbiome"],metabolites=locrecrd[,"metabolites"],outcome=locrecrd[,"outcome"],mediationeffect=modelsumr$d0,mediationeffect_p=modelsumr$d0.p,directeffect=modelsumr$z0,directeffect_p=modelsumr$z0.p,proportion=modelsumr$n0,proportion_p=modelsumr$n0.p,step1coef=summary(mediator_lm)$coefficients["microbiome","Estimate"],step2coef=summary(outcome_lm)$coefficients["metabolite","Estimate"],ci=paste0(formatC(modelsumr$d0.ci,format="E",digits=2),collapse=" "))
 }
 stattab=Reduce("rbind",tabstat_list)
 # reverse run

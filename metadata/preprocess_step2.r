@@ -15,7 +15,7 @@ require(reshape2)
 # read meta data raw file
 projdir="/Users/yuewu/Library/CloudStorage/Box-Box/Yue Wu's Files/cgm_meal_project/"
 dirdata=paste0(projdir,"data/metadata/")
-metatab=as.data.frame(read_excel(paste0(dirdata,"metadata_upd_042023_manuclean.xlsx"),na=c("","NA","na","N/A","NaN")))
+metatab=as.data.frame(read_excel(paste0(dirdata,"metadatafile.xlsx"),na=c("","NA","na","N/A","NaN")))
 tab_metabolictesting=read.table(paste0(projdir,"data/washu_combined_batches_09302021_metabolic_testing.csv"),header=TRUE,sep=",")
 tab_metabolictesting=tab_metabolictesting[tab_metabolictesting[,"TimePoint"]==0,c("SubjectID","Insulin","C_peptide","GLP1","GIP","Glucagon_pmol_L","VitaminD")]
 summartab<-tab_metabolictesting %>% group_by(SubjectID) %>% summarize(across(where(is.numeric),~ mean(.x,na.rm=TRUE),.names="{.col}_metabolic_testing_mean"))%>%as.data.frame()

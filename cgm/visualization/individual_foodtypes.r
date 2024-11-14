@@ -9,11 +9,13 @@ require(tidyr)
 require(Hmisc)
 require(npreg)
 require(readxl)
+require(plyr)
 require(dplyr)
 require(data.table)
 require(ComplexHeatmap)
 require(ggpubr)
 require(circlize)
+require(lsr)
 # modify to you local path for it to work
 comp="/Users/yuewu/"
 pardir=paste0(comp,"Library/CloudStorage/Box-Box/Yue Wu's Files/cgm_meal_project/");
@@ -97,7 +99,7 @@ for(subjecti in seq(nsubjects)){
     featfullmat_full[subjecti,]=locvec
 }
 neword=order(apply(featfullmat_full,1,function(x) sum(is.na(x))))
-frontind=neword[which(rownames(featfullmat_full)[neword]=="56")]
+frontind=neword[which(rownames(featfullmat_full)[neword]=="SOMEID")]
 neword_plot=c(frontind,setdiff(neword,frontind))
 # featfullmat=scale(featfullmat)
 # mitigators effect upon pure rice
@@ -185,7 +187,7 @@ metadatashow=as.data.frame(matrix(NA,nrow=nsubjects,ncol=length(showcols)+1))
 rownames(metadatashow)=subjects
 colnames(metadatashow)=c("study_id",showcols)
 for(subj in subjects){
-    match_id=paste0("STUDYID-",str_pad(subj,3,pad="0"))
+    match_id=paste0("STUDYID",str_pad(subj,3,pad="0"))
     metadatashow[subj,]=metadata[metadata[,"study_id"]==match_id,c("study_id",showcols)]
 }
 save(metadatashow,file="meta_idconv.RData")
@@ -208,6 +210,7 @@ chcolssub=c("hp_hypertension","hp_hyperlipidemia","sex.factor","ethnicity")
 metadatashow_plot=metadatashow
 metadatashow_plot$sspg_avg_all_unscale=metadatashow_plot$sspg_avg_all
 metadatashow_plot$modified_DI_heyjun_unscale=metadatashow_plot$modified_DI_heyjun
+metadatashow_plot$bmi_avg_all_unscale=metadatashow_plot$bmi_avg_all
 for(col in numcolssub){
     metadatashow_plot[,col]=scale(metadatashow_plot[,col])[,1]
 }
@@ -276,7 +279,7 @@ foodord=c("Pasta","Grapes","Rice","Bread","Potatoes")
 plotdf[,"worstfood"]=factor(plotdf[,"worstfood"],level=foodord)
 # stat test comparison
 comp_feat_list=list("Grapes"=c("a1c_avg_all","fbg_avg_all","insulin_fasting_avg_all","cholesterol_total_avg_all","ldl_avg_all","hdl_avg_all","sspg_avg_all"),
-                    "Potatoes"=c("a1c_avg_all","fbg_avg_all","ffa_avg_heyjun","sspg_avg_all","ie_heyjun","bmi_avg_all"),
+                    "Potatoes"=c("a1c_avg_all","fbg_avg_all","ffa_avg_heyjun","sspg_avg_all","ie_heyjun","bmi_avg_all","modified_DI_heyjun","hepatic_IR_heyjun"),
                     "Bread"=c("systolic_avg_all","diastolic_avg_all"))
 for(center_gr in names(comp_feat_list)){
     compfeat=comp_feat_list[[center_gr]]
@@ -285,7 +288,7 @@ for(center_gr in names(comp_feat_list)){
         comparisons[[length(comparisons)+1]]=c(food,center_gr)
     }
     for(colfeat in compfeat){
-        p<-ggboxplot(plotdf,x="worstfood",y=colfeat)+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+        p<-ggboxplot(plotdf,x="worstfood",y=colfeat,add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
         ggsave(plot=p,paste0(resdir,"boxplot_spiketype_meta",colfeat,"_compare_",center_gr,".pdf"))
     }
 }
@@ -301,7 +304,7 @@ foodord=c("Pasta","Grapes","Rice","Bread","Potatoes")
 plotdf[,"worstfood"]=factor(plotdf[,"worstfood"],level=foodord)
 # stat test comparison
 comp_feat_list=list("Grapes"=c("a1c_avg_all","fbg_avg_all","insulin_fasting_avg_all","cholesterol_total_avg_all","ldl_avg_all","hdl_avg_all","sspg_avg_all"),
-                    "Potatoes"=c("a1c_avg_all","fbg_avg_all","ffa_avg_heyjun","sspg_avg_all","ie_heyjun","bmi_avg_all"),
+                    "Potatoes"=c("a1c_avg_all","fbg_avg_all","ffa_avg_heyjun","sspg_avg_all","ie_heyjun","bmi_avg_all","modified_DI_heyjun","hepatic_IR_heyjun"),
                     "Bread"=c("systolic_avg_all","diastolic_avg_all"))
 for(center_gr in names(comp_feat_list)){
     compfeat=comp_feat_list[[center_gr]]
@@ -310,7 +313,7 @@ for(center_gr in names(comp_feat_list)){
         comparisons[[length(comparisons)+1]]=c(food,center_gr)
     }
     for(colfeat in compfeat){
-        p<-ggboxplot(plotdf,x="worstfood",y=colfeat)+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+        p<-ggboxplot(plotdf,x="worstfood",y=colfeat,add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
         ggsave(plot=p,paste0(resdir,"boxplot_spiketype_meta",colfeat,"_compare_",center_gr,"unscale.pdf"))
     }
 }
@@ -356,13 +359,30 @@ ievec=metadatashow_plot$modified_DI_heyjun_unscale
 IE_status_new[ievec<quantile(ievec,0.4,na.rm=TRUE)]="Dysfunctional"
 IE_status_new[ievec>quantile(ievec,0.6,na.rm=TRUE)]="Normal"
 metadatashow_plot$IE_status_new=IE_status_new
-subtyvec=c("t2d_status_ada_bl","a1c_t2d_status_bl","sspg_status_heyjun","DI_status_heyjun","IE_status_heyjun","HOMA_IR_group_heyjun","FFA_3classes_heyjun","hepatic_ir_3classes_heyjun","sspg_status_new","IE_status_new","sspg_status_new2")
+a1c_t2d_status_bl_2=metadatashow_plot$a1c_t2d_status_bl
+a1c_t2d_status_bl_2[a1c_t2d_status_bl_2=="T2D"]="preDM"
+metadatashow_plot$a1c_t2d_status_bl_2=a1c_t2d_status_bl_2
+# mixed group
+t2d_ir_mix=rep(NA,times=dim(metadatashow_plot)[1])
+for(typ1 in c("Normal","preDM")){
+    for(typ2 in c("IS","IR")){
+        ind=which(metadatashow_plot$a1c_t2d_status_bl_2==typ1&metadatashow_plot$sspg_status_heyjun==typ2)
+        namstr=paste0(typ1,"_",typ2)
+        t2d_ir_mix[ind]=namstr
+    }
+}
+metadatashow_plot$t2d_ir_mix=t2d_ir_mix
+# 
+metadatashow_plot$bmi_group=ifelse(metadatashow_plot$bmi_avg_all_unscale>=25,"Overweight","Normal")
+# 
+subtyvec=c("t2d_status_ada_bl","a1c_t2d_status_bl","a1c_t2d_status_bl_2","sspg_status_heyjun","DI_status_heyjun","IE_status_heyjun","HOMA_IR_group_heyjun","FFA_3classes_heyjun","hepatic_ir_3classes_heyjun","sspg_status_new","IE_status_new","sspg_status_new2","t2d_ir_mix","sex.factor","ethnicity","bmi_group")
 colnames(mat_mitigator_effect)=c("Fat","Fiber","Protein")
 plotdf=cbind(metadatashow_plot[subjects,c(subtyvec,"modified_DI_heyjun","sspg_avg_all")],mat_peak)
 plotdf=cbind(plotdf,mat_mitigator_effect)
 foodslistcheck=c(colnames(mat_peak),colnames(mat_mitigator_effect))
 orderlist=list("t2d_status_ada_bl"=c("Normal","preDM","T2D"),
                "a1c_t2d_status_bl"=c("Normal","preDM","T2D"),
+               "a1c_t2d_status_bl_2"=c("Normal","preDM"),
                "sspg_status_heyjun"=c("IS","IR"),
                "DI_status_heyjun"=c("BC_normal","BC_inter","BC_dys"),
                "IE_status_heyjun"=c("IE_normal","IE_inter","IE_dys"),
@@ -371,7 +391,11 @@ orderlist=list("t2d_status_ada_bl"=c("Normal","preDM","T2D"),
                "hepatic_ir_3classes_heyjun"=c("Hepatic_IS","Hepatic_Intermediate","Hepatic_IR"),
                "sspg_status_new"=c("IS","IR"),
                "IE_status_new"=c("Normal","Dysfunctional"),
-               "sspg_status_new2"=c("IS","IR"))
+               "sspg_status_new2"=c("IS","IR"),
+               "t2d_ir_mix"=c("Normal_IS","Normal_IR","preDM_IS","preDM_IR"),
+               "sex.factor"=c("Female","Male"),
+               "ethnicity"=c("White","Asian"),
+               "bmi_group"=c("Normal","Overweight"))
 for(subtcol in subtyvec){
     plotdf2=plotdf[!is.na(plotdf[,subtcol]),]
     sublistv=plotdf2[,subtcol]
@@ -381,7 +405,7 @@ for(subtcol in subtyvec){
     # reorder the plot dataframe
     plotdf2[,subtcol]=factor(plotdf2[,subtcol],levels=orderlist[[subtcol]])
     for(food in foodslistcheck){
-        p<-ggboxplot(plotdf2,x=subtcol,y=food)+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+        p<-ggboxplot(plotdf2,x=subtcol,y=food,add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
         ggsave(plot=p,paste0(resdir,"boxplot_metabotype_meta",food,"_compare_",subtcol,".pdf"))
     }
 }
@@ -392,7 +416,7 @@ sublistv=plotdf2[,"sspg_status_new"]
 sublistuniq=unique(sublistv)
 comparisons=combn(sublistuniq,2,simplify=FALSE)
 # plot(plotdf[ind,"sspg_avg_all_unscale"],plotdf[ind,"Potatoes"])
-p<-ggboxplot(plotdf2,x="sspg_status_new",y="potatovsgrapes")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+p<-ggboxplot(plotdf2,x="sspg_status_new",y="potatovsgrapes",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
 ggsave(plot=p,paste0(resdir,"boxplot_metabotype_meta_potatogrape_compare_sspg_all.pdf"))
 # 
 plotdf2=plotdf[!is.na(plotdf[,"sspg_status_new2"]),]
@@ -400,7 +424,7 @@ sublistv=plotdf2[,"sspg_status_new2"]
 sublistuniq=unique(sublistv)
 comparisons=combn(sublistuniq,2,simplify=FALSE)
 # plot(plotdf[ind,"sspg_avg_all_unscale"],plotdf[ind,"Potatoes"])
-p<-ggboxplot(plotdf2,x="sspg_status_new2",y="potatovsgrapes")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+p<-ggboxplot(plotdf2,x="sspg_status_new2",y="potatovsgrapes",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
 ggsave(plot=p,paste0(resdir,"boxplot_metabotype_meta_potatogrape_compare_sspg_all_old_thres.pdf"))
 # 
 plotdf2=plotdf[!is.na(plotdf[,"sspg_status_heyjun"]),]
@@ -408,7 +432,7 @@ sublistv=plotdf2[,"sspg_status_heyjun"]
 sublistuniq=unique(sublistv)
 comparisons=combn(sublistuniq,2,simplify=FALSE)
 # plot(plotdf[ind,"sspg_avg_all_unscale"],plotdf[ind,"Potatoes"])
-p<-ggboxplot(plotdf2,x="sspg_status_heyjun",y="potatovsgrapes")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+p<-ggboxplot(plotdf2,x="sspg_status_heyjun",y="potatovsgrapes",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
 ggsave(plot=p,paste0(resdir,"boxplot_metabotype_meta_potatogrape_compare_sspg_old.pdf"))
 # t.test between groups of metabolic functions in food spikes
 testtab=c()
@@ -425,20 +449,37 @@ for(subtcol in subtyvec){
             loctab=plotdf2[plotdf2[,subtcol]%in%comppair,c(food,subtcol)]
             colnames(loctab)=c("value","group")
             loctab=loctab[!is.na(loctab[,"value"]),]
+            templist=list()
             if(min(table(loctab[,"group"]))>2){
-                pval=t.test(value~group,data=loctab)$p.value
+                teststat=t.test(value~group,data=loctab)
+                templist[["pval"]]=teststat$p.value
+                templist[["statistics"]]=teststat$statistic
+                templist[["ci"]]=paste0(formatC(teststat$conf.int,format="E",digits=2),collapse=" ")
+                templist[["Df"]]=teststat$parameter
+                templist[["effectsz"]]=cohensD(value~group,data=loctab)
             }else{
-                pval=NA
+                templist[["pval"]]=NA
+                templist[["statistics"]]=NA
+                templist[["ci"]]=NA
+                templist[["Df"]]=NA
+                templist[["effectsz"]]=NA
             }
             gp1ind=loctab[,"group"]==comppair[1]
             delta=mean(loctab[!gp1ind,"value"],na.rm=TRUE)-mean(loctab[gp1ind,"value"],na.rm=TRUE)
-            testtab=rbind(testtab,data.frame(food=food,group1=comppair[1],group2=comppair[2],delta=delta,pval=pval))
+            testtab=rbind(testtab,data.frame(food=food,category=subtcol,group1=comppair[1],group2=comppair[2],delta=delta,pval=templist[["pval"]],statistics=templist[["statistics"]],ci=templist[["ci"]],Df=templist[["Df"]],effectsz=templist[["effectsz"]]))
         }
     }
 }
-testtab$padj=p.adjust(testtab$pval,method="fdr")
-save(testtab,file="stat_gp_test_food_subtype.RData")
-write.table(testtab,file="stat_gp_test_food_subtype.tsv",row.names=FALSE)
+testtab_adj=c()
+for(subtcol in subtyvec){
+    subtab=testtab[testtab[,"category"]==subtcol,]
+    subtab$padj=p.adjust(subtab$pval,method="fdr")
+    testtab_adj=rbind(testtab_adj,subtab)
+}
+save(testtab_adj,file="stat_gp_test_food_subtype.RData")
+write.table(testtab_adj,file="stat_gp_test_food_subtype.tsv",row.names=FALSE)
+testtab_adj_sele=testtab_adj[testtab_adj[,"category"]%in%c("sspg_status_heyjun","DI_status_heyjun"),]
+write.table(testtab_adj_sele,file="stat_gp_test_food_subtype_selec.tsv",row.names=FALSE)
 # check food spike with both sspg and DI in one model
 statcoll=c()
  for(food in foodslistcheck){
@@ -451,3 +492,61 @@ statcoll=c()
 }
 statcoll$padj=p.adjust(statcoll[,"pval"],method="fdr")
 save(statcoll,file="sspg_and_di_foodspike.RData")
+# paired test for mitigators for each groups
+subtyvec=c("sspg_status_heyjun","DI_status_heyjun")
+feat_to_compares=c("peak_relative","AUC_above_baseline","time_to_peak")
+stat_coll_pair=c()
+mitig_comb=c("Rice+Fiber","Rice+Fat","Rice+Protein")
+for(subtcol in subtyvec){
+    plotdf2=plotdf[!is.na(plotdf[,subtcol])&plotdf[,subtcol]!="Unknown",]
+    sublistv=plotdf2[,subtcol]
+    sublistuniq=unique(sublistv)
+    ggplottablong=c()
+    for(subg in sublistuniq){
+        selecsub=rownames(plotdf2[plotdf2[,subtcol]==subg,])
+        feattabsub=feattab[feattab[,"subject"]%in%selecsub,]
+        for(feature in feat_to_compares){
+            for(foodthe in mitig_comb){
+                xtab <- feattabsub %>% filter(foods %in% c("Rice")) %>% group_by(subject) %>% summarize(meanval=mean(.data[[feature]]),.groups="keep") %>% group_by(subject) %>% as.data.frame()
+                ytab <- feattabsub %>% filter(foods %in% c(foodthe)) %>% group_by(subject) %>% summarize(meanval=mean(.data[[feature]]),.groups="keep") %>% group_by(subject) %>% as.data.frame()
+                subjs=ytab[,"subject"]
+                xorder=match(subjs,xtab[,"subject"])
+                teststat=t.test(xtab[xorder,"meanval"],ytab[,"meanval"],paired=TRUE)
+                stat_coll_pair=rbind(stat_coll_pair,data.frame(category=subtcol,group=subg,foods=foodthe,feature=feature,pval=teststat$p.value,statistics=teststat$statistic,ci=paste0(formatC(teststat$conf.int,format="E",digits=2),collapse=" "),Df=teststat$parameter,effectsz=cohensD(xtab[,"meanval"],ytab[,"meanval"]),delta=mean(ytab[,"meanval"])-mean(xtab[xorder,"meanval"])))
+            }
+            temptab=feattabsub[feattabsub[,"foods"]%in%c("Rice",mitig_comb),c("subject",feature,"foods")]
+            colnames(temptab)[2]="value"
+            temptab$cgmfeature=feature
+            temptab$subtype=subg
+            ggplottablong=rbind(ggplottablong,temptab)
+        }
+    }
+    # bar plot 
+    for(feature in feat_to_compares){
+        loctab=ggplottablong[ggplottablong[,"cgmfeature"]==feature,]
+        loctab$foods=factor(loctab$foods,levels=c("Rice","Rice+Fiber","Rice+Protein","Rice+Fat"))
+        cdata<-ddply(loctab,c("cgmfeature","subtype","foods"),summarise,
+                N=length(value),
+                mean=mean(value),
+                sd=sd(value),
+                se=sd/sqrt(N)
+        )
+        p<-ggplot(cdata,aes(x=foods,y=mean,fill=subtype))+geom_bar(stat="identity",position="dodge",width=0.2)+geom_errorbar(aes(ymin=mean-2*se,ymax=mean+2*se),position=position_dodge(.9),width=0.2)+geom_point(data=loctab,aes(x=foods,y=value),position=position_jitter(seed=1,width=0.1))+facet_wrap(~subtype,ncol=1,scales="free")+ylab(feature)+theme_bw()+theme(axis.line=element_line(colour="black"),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_blank(),panel.background=element_blank()) 
+        ggsave(paste0(subtcol,feature,"mitigation.pdf"),plot=p)
+    }
+}
+stat_coll_pair=stat_coll_pair[stat_coll_pair[,"group"]!="BC_inter",]
+stat_coll_pair_adj=c()
+for(subtcol in subtyvec){
+    plotdf2=plotdf[!is.na(plotdf[,subtcol])&plotdf[,subtcol]!="Unknown",]
+    sublistv=plotdf2[,subtcol]
+    sublistuniq=unique(sublistv)
+    for(subg in sublistuniq){
+        for(foodthe in mitig_comb){
+            subtab=stat_coll_pair[stat_coll_pair[,"foods"]==foodthe&stat_coll_pair[,"category"]==subtcol&stat_coll_pair[,"group"]==subg,]
+            subtab$padj=p.adjust(subtab$pval,method="fdr")
+            stat_coll_pair_adj=rbind(stat_coll_pair_adj,subtab)
+        }
+    }
+}
+write.table(stat_coll_pair_adj,file="foodvs_ttest.mitig_pair_subt.txt",row.names=FALSE)

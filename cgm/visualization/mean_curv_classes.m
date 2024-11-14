@@ -51,6 +51,10 @@ for grpname=grouplist
             foodc=foodc{1};
             food_ind=strcmp(foodsele,foodc);
             locmat=matsele(:,food_ind&subind);
+            if strcmp(foodc,"Rice")
+                [grpname, groupsep]
+                unique(subject_vec_sele(food_ind&subind))
+            end
             meanvec=mean(locmat,2);
             styleid=strcmp(colorlabels,foodc);
             p=plot(timvecsort,meanvec,'Color',colors(styleid,:),'LineWidth',2,'LineStyle',linelabels(styleid));

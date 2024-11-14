@@ -65,6 +65,10 @@ names(list_sig)=paste0(rep(c("spikh","spikl"),each=nfoodsig),rep(foodtypes,times
 stattab=c()
 for(foodsigi in seq(nfoodsig)){
     pvec=c()
+    statvec=c()
+    civec=c()
+    Dfvec=c()
+    effectvec=c()
     detltavec=c()
     for(omicsi in seq(nomics)){
         locdf=testtab[,c(featvec[omicsi],foodtypes[foodsigi])]
@@ -74,12 +78,20 @@ for(foodsigi in seq(nfoodsig)){
         if(length(unique(locdf[,"value"]))<=1 | min(table(locdf[,"group"]))<=3){
             pvec=c(pvec,NA)
             detltavec=c(detltavec,NA)
+            statvec=c(statvec,NA)
+            civec=c(civec,NA)
+            Dfvec=c(Dfvec,NA)
+            effectvec=c(effectvec,NA)
         }else{
-            pval=t.test(value~group,data=locdf)$p.value
+            teststat=t.test(value~group,data=locdf)
             # pval=wilcox.test(value~group,data=locdf)$p.value
             delta=mean(locdf[locdf[,"group"]==1,"value"],na.rm=TRUE)-mean(locdf[locdf[,"group"]==0,"value"],na.rm=TRUE)
-            pvec=c(pvec,pval)
+            pvec=c(pvec,teststat$p.value)
             detltavec=c(detltavec,delta)
+            statvec=c(statvec,teststat$statistic)
+            civec=c(civec,paste0(formatC(teststat$conf.int,format="E",digits=2),collapse=" "))
+            Dfvec=c(Dfvec,teststat$parameter)
+            effectvec=c(effectvec,cohensD(value~group,data=locdf))
         }
     }
     delta_mat[,foodsigi]=detltavec
@@ -102,7 +114,7 @@ for(foodsigi in seq(nfoodsig)){
             list_sig[[listname]]=c(list_sig[[listname]],compdnames[listname_i])
         }
     }
-    stattab=rbind(stattab,data.frame(food=rep(foodtypes[foodsigi],times=len),feature=featvec[sigmask],omics=omicsvec[sigmask],delta=detltavec[sigmask],pval=pvec[sigmask],padj=padj[sigmask]))
+    stattab=rbind(stattab,data.frame(food=rep(foodtypes[foodsigi],times=len),feature=featvec[sigmask],omics=omicsvec[sigmask],delta=detltavec[sigmask],pval=pvec[sigmask],padj=padj[sigmask],statistics=statvec[sigmask],ci=civec[sigmask],Df=Dfvec[sigmask],effectsz=effectvec[sigmask]))
 }
 # metabolomics reformat kegg and hmdb ids
 loctab=annolist[["metabolomics"]]
@@ -352,7 +364,7 @@ comparisons=list()
 for(food in setdiff(foodsvis,center_gr)){
     comparisons[[length(comparisons)+1]]=c(food,center_gr)
 }
-p<-ggboxplot(plotdf,x="worstfood",y="value")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+p<-ggboxplot(plotdf,x="worstfood",y="value",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
 ggsave(plot=p,paste0("boxplot_spiketype_meta",compfeat,"_compare_",center_gr,".pdf"))
 # lipids bar 0.2 fdr cut off
 lipidlist=c("PALMITOLEIC ACID","MYRISTIC ACID","TAG56:3-FA16:0","TAG52:0-FA16:0","C12:1,DC FA(4)")
@@ -368,6 +380,6 @@ comparisons=list("1"=c("Potatoes","Grapes"),"2"=c("Potatoes","Others"),"3"=c("Gr
 for(colfeat in lipidlist){
     plotdftemp=plotdf[,c(colfeat,"worstfood")]
     colnames(plotdftemp)[1]="value"
-    p<-ggboxplot(plotdftemp,x="worstfood",y="value")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)+ggtitle(colfeat)
+    p<-ggboxplot(plotdftemp,x="worstfood",y="value",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)+ggtitle(colfeat)
     ggsave(plot=p,paste0("boxplot_spiketype_meta",colfeat,"_compare_.pdf"))
 }

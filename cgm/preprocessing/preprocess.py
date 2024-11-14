@@ -117,7 +117,7 @@ study_meals=pd.concat([study_meals, food_log[(food_log['Group'].isin(studymealli
 # Clean cycles
 study_meals['cycle'].unique()
 study_meals.loc[study_meals['cycle'].isin(['cycle 1','Cycle 1']),'cycle']=1
-study_meals.loc[study_meals['cycle'].isin(['cycle 2','Cycle 2', 'cycle 2.2','STUDYID-084 diet cycles']),'cycle']=2
+study_meals.loc[study_meals['cycle'].isin(['cycle 2','Cycle 2', 'cycle 2.2','STUDYID-ID diet cycles']),'cycle']=2
 study_meals.loc[study_meals['cycle'].isin(['cycle 3','Cycle 3']),'cycle']=3
 study_meals=study_meals[study_meals['cycle']!=3]
 # standarized meal names

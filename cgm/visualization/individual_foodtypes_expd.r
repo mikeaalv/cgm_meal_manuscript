@@ -22,10 +22,14 @@ setwd(resdir)
 # 
 feattab=read.table("cgm_foods_manual_features.csv",header=TRUE,sep=",")
 feattab=feattab[,c("subject","foods","rep","mitigator","peak_value","baseline_glucose","AUC_above_baseline","time_to_peak","glucose_at_120_mins")]
-checkfeats=c("AUC_above_baseline","glucose_at_120_mins")
+checkfeats=c("AUC_above_baseline","glucose_at_120_mins","time_to_peak","peak_abs")
 for(chfeat in checkfeats){
     if(chfeat=="AUC_above_baseline"){
         feattab$quan_relative=feattab$AUC_above_baseline
+    }else if(chfeat=="time_to_peak"){
+        feattab$quan_relative=feattab$time_to_peak
+    }else if(chfeat=="peak_abs"){
+        feattab$quan_relative=feattab$peak_value
     }else{
         feattab$quan_relative=feattab$glucose_at_120_mins-feattab$baseline_glucose
     }
@@ -278,7 +282,7 @@ for(chfeat in checkfeats){
             comparisons[[length(comparisons)+1]]=c(food,center_gr)
         }
         for(colfeat in compfeat){
-            p<-ggboxplot(plotdf,x="worstfood",y=colfeat)+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+            p<-ggboxplot(plotdf,x="worstfood",y=colfeat,add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
             ggsave(plot=p,paste0(resdir,"boxplot_spiketype_meta",colfeat,"_compare_",center_gr,chfeat,".pdf"))
         }
     }
@@ -343,7 +347,7 @@ for(chfeat in checkfeats){
         # reorder the plot dataframe
         plotdf2[,subtcol]=factor(plotdf2[,subtcol],levels=orderlist[[subtcol]])
         for(food in foodslistcheck){
-            p<-ggboxplot(plotdf2,x=subtcol,y=food)+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+            p<-ggboxplot(plotdf2,x=subtcol,y=food,add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
             ggsave(plot=p,paste0(resdir,"boxplot_metabotype_meta",food,"_compare_",subtcol,".",chfeat,".pdf"))
         }
     }
