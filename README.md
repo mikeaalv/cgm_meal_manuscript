@@ -12,4 +12,4 @@ Feature extraction, run the `./cgm/feature_extraction/manual_feature.py` and plo
 Analysis, run `run_analysis.r`
 
 ## dependencies
-Please refer to the [supplementary files]() for the R and Python environment
+Please refer to the [supplementary files]() for the R and Python environment. The scripts have been tested on a Mac OS computer.
