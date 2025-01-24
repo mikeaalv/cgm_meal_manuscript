@@ -10,11 +10,11 @@ import os
 # features=importlib.util.module_from_spec(spec)
 # sys.modules["features"]=features
 # spec.loader.exec_module(features)
-import features
+import features#copy the python file to the working folder
 # 
-respath="/Users/yuewu/Library/CloudStorage/Box-Box/Yue Wu's Files/cgm_meal_project/result/cgm_meal/"
+respath="PATH"
 os.chdir(respath)
-cgm_foods=pd.read_csv(respath+"cgm_foods_smooth.txt",sep='\s+')
+cgm_foods=pd.read_csv(respath+"data_cgm.csv",sep=',')
 # 
 food_summary_statistics=features.calculate_food_challenge_features(cgm_foods)
 food_summary_statistics.to_csv('cgm_foods_manual_features.csv',index=False)
