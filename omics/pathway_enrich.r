@@ -529,10 +529,18 @@ for(omics in featplot){
 splitn=sapply(lists_compd,length)
 split=rep(names(lists_compd),times=splitn)
 # 
+pmat_fdr=p.adjust(c(p_mat),method="fdr")
+dim(pmat_fdr)=dim(p_mat)
+rownames(pmat_fdr)=rownames(p_mat)
+colnames(pmat_fdr)=colnames(p_mat)
 h=Heatmap(cor_mat,name="corrmat",cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=TRUE,show_column_names=TRUE,row_split=split,
         cell_fun=function(j,i,x,y,w,h,fill){
             if(p_mat[i,j]<0.05){
-                grid.text("*",x,y)
+                if(pmat_fdr[i,j]<0.2){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
             }
         },
         col=circlize::colorRamp2(c(-1,0,1),c("blue","white","red")))#

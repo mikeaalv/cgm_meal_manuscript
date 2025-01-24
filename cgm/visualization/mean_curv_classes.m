@@ -34,6 +34,11 @@ mask2=ismember(food_and_metigator_vec,colorlabels);
 foodsele=food_and_metigator_vec(mask2);
 matsele=ymat_shift(:,mask2);
 subject_vec_sele=subject_vec(mask2);
+CGMvalue=[];
+Timevalue=[];
+Foodtypes=[];
+groupsepvalue=[];
+groupnamevalue=[];
 for grpname=grouplist
     groupvec=metadata2{:,grpname};
     groupeles=unique(groupvec(~strcmp(groupvec,'NA')));
@@ -61,6 +66,11 @@ for grpname=grouplist
             ylim([80 200]);
             hlist{i}=p(1);
             i=i+1;
+            CGMvalue=[CGMvalue; meanvec];
+            Timevalue=[Timevalue; timvecsort];
+            Foodtypes=[Foodtypes; repmat({foodc},[length(meanvec),1])];
+            groupsepvalue=[groupsepvalue; repmat(groupsep,[length(meanvec),1])];
+            groupnamevalue=[groupnamevalue; repmat(grpname,[length(meanvec),1])];
         end
         legend([hlist{:}],colorlabels);
         title(groupsep{1});
@@ -69,6 +79,12 @@ for grpname=grouplist
     saveas(h,[workdir,grpname{1},'curv.mean.fig']);
     close all;
 end
+colltab=table(CGMvalue,Timevalue,Foodtypes,groupsepvalue,groupnamevalue);
+colltab=colltab(ismember(colltab{:,'groupnamevalue'},{'sspg_status_heyjun','di_3classes_heyjun'}),:);
+colltab=colltab(~ismember(colltab{:,'groupsepvalue'},{'BC_intermediate'}),:);
+colltab=colltab(~ismember(colltab{:,'Foodtypes'},{'Rice+Fat','Rice+Fiber','Rice+Protein'}),:);
+colltab=colltab(:,{'CGMvalue','Timevalue','Foodtypes','groupsepvalue'});
+writetable(colltab,'fig3a.txt','WriteRowNames',true);
 % target plot di beta cell funiton wiht normal combine with intermediate
 grpname='di_3classes_heyjun';
 groupvec=metadata2{:,grpname};
@@ -146,6 +162,11 @@ subwithmitig=unique(subject_vec_sele(withmitig));
 withind=cellfun(@(x) any(strcmp(x,subwithmitig)),metadata2{:,"study_id"});
 metadata3=metadata2(withind,:);
 grouplist={'a1c_t2d_status_bl','sspg_status_heyjun','di_2classes_heyjun','ie_3_classes_heyjun','FFA_3classes_heyjun','hepatic_ir_3classes_heyjun'};
+CGMvalue=[];
+Timevalue=[];
+Foodtypes=[];
+groupsepvalue=[];
+groupnamevalue=[];
 for grpname=grouplist
     groupvec=metadata3{:,grpname};
     groupeles=unique(groupvec(~strcmp(groupvec,'NA')));
@@ -173,6 +194,11 @@ for grpname=grouplist
             ylim([80 200]);
             hlist{i}=p(1);
             i=i+1;
+            CGMvalue=[CGMvalue; meanvec];
+            Timevalue=[Timevalue; timvecsort];
+            Foodtypes=[Foodtypes; repmat({foodc},[length(meanvec),1])];
+            groupsepvalue=[groupsepvalue; repmat(groupsep,[length(meanvec),1])];
+            groupnamevalue=[groupnamevalue; repmat(grpname,[length(meanvec),1])];
         end
         legend([hlist{:}],plotlist);
         title(groupsep{1});
@@ -181,6 +207,10 @@ for grpname=grouplist
     saveas(h,[workdir,grpname{1},'curv.mean.mititarg.fig']);
     close all;
 end
+colltab=table(CGMvalue,Timevalue,Foodtypes,groupsepvalue,groupnamevalue);
+colltab=colltab(ismember(colltab{:,'groupnamevalue'},{'sspg_status_heyjun'}),:);
+colltab=colltab(:,{'CGMvalue','Timevalue','Foodtypes','groupsepvalue'});
+writetable(colltab,'fig4c.txt','WriteRowNames',true);
 % 
 h=figure();
 i=1;

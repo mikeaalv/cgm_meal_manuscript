@@ -365,14 +365,37 @@ for(omicch in c("lipidomics","metabolomics")){
     selefeat=names(valvec)[valvec>1]
     p_mat_sele=p_mat[selefeat,]
     cor_mat_sele=cor_mat[selefeat,]
+    # the original fdr value 
+    p_mat_sele_fdr=matrix(1,nrow=length(selefeat),ncol=dim(cor_mat_sele)[2])
+    rownames(p_mat_sele_fdr)=selefeat
+    colnames(p_mat_sele_fdr)=colnames(cor_mat_sele)
+    for(subtyp in colnames(cor_mat_sele)){
+        for(feat in selefeat){
+            padj=tabstat_cor[tabstat_cor[,"feature"]==feat&tabstat_cor[,"clinic"]==subtyp,"padj"]
+            if(length(padj)>0){
+                p_mat_sele_fdr[feat,subtyp]=padj
+            }
+        }
+    }
     h=Heatmap(cor_mat_sele,name="corrmat",cluster_columns=TRUE,cluster_rows=TRUE,show_row_names=TRUE,show_column_names=TRUE,
             cell_fun=function(j,i,x,y,w,h,fill){
                 if(p_mat_sele[i,j]<0.05){
-                    grid.text("*",x,y)
+                    if(p_mat_sele_fdr[i,j]<0.05){
+                        grid.text("**",x,y)
+                    }else{
+                        grid.text("*",x,y)
+                    }
                 }
             },
             col=circlize::colorRamp2(c(-1,0,1),c("blue","white","red")))#
     pdf(paste0("omics_corr_heatmap_metalipi_clinic.",omicch,".pdf"),width=7,height=15)#,width=7,height=30
     draw(h,main_heatmap="corrmat")
     dev.off()
+    savdf=cor_mat_sele
+    colnames(savdf)=str_remove(string=colnames(savdf),pattern="(\\_avg\\_all)|(\\_heyjun)")
+    rownames(savdf)=str_remove(string=rownames(savdf),pattern="^L\\-")
+    if(omicch=="metabolomics"){
+        rownames(savdf)[rownames(savdf)=="C20:4,DC FA"]="Unknown1"
+    }
+    write.table(savdf,file=paste0("figext8_9",omicch,".txt"))
 }

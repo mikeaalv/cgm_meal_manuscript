@@ -13,6 +13,7 @@ require(npreg)
 require(ppcor)
 require(readxl)
 require(ggpubr)
+require(lsr)
 # 
 require(clusterProfiler)
 require(org.Hs.eg.db)
@@ -43,8 +44,8 @@ omicsvec=omicsvec[nondupmask]
 featvec=featvec[nondupmask]
 # select sig change features
 colnames(omicsmat)=featvec
-groupvec=c("Bread","Grapes","Potatoes","Rice","Mitigator")
-testtab=merge(omicsmat,mat_worstfood[,groupvec[seq(4)]],by="row.names")
+groupvec=c("Bread","Grapes","Potatoes","Rice","Pasta","Mitigator")
+testtab=merge(omicsmat,mat_worstfood[,groupvec[seq(5)]],by="row.names")
 rownames(testtab)=testtab[,1]
 testtab=testtab[,-1]
 mitig_tab=as.data.frame(ifelse(rowMeans(mat_mitigator_effect)>0,1,0))
@@ -352,7 +353,7 @@ write.table(stattab,file="omics_gp_comp.tsv",row.names=FALSE)
 # stat test comparison bread
 center_gr="Bread"
 compfeat="N1-Methyladenosine"
-foodsvis=groupvec[seq(4)]
+foodsvis=groupvec[seq(5)]
 plotdf=testtab[,c(compfeat,foodsvis)]
 worstfoodvec=rep(NA,times=nrow(plotdf))
 for(foodhere in foodsvis){
@@ -383,3 +384,30 @@ for(colfeat in lipidlist){
     p<-ggboxplot(plotdftemp,x="worstfood",y="value",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)+ggtitle(colfeat)
     ggsave(plot=p,paste0("boxplot_spiketype_meta",colfeat,"_compare_.pdf"))
 }
+# plot showing each groups
+for(thecent in c("Potatoes","Grapes")){
+    for(colfeat in lipidlist){
+        plotdf=testtab[,c(colfeat,foodsvis)]
+        worstfoodvec=rep(NA,times=nrow(plotdf))
+        for(foodhere in foodsvis){
+            worstfoodvec[which(plotdf[,foodhere]==1)]=foodhere
+        }
+        plotdf$worstfood=worstfoodvec
+        colnames(plotdf)[1]="value"
+        comparisons=list()
+        for(food in setdiff(foodsvis,thecent)){
+            comparisons[[length(comparisons)+1]]=c(food,thecent)
+        }
+        p<-ggboxplot(plotdf,x="worstfood",y="value",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE)
+        ggsave(plot=p,paste0("boxplot_spiketype_meta",colfeat,"_compare_",thecent,".pdf"))
+    }
+}
+compdlist=c("N1-Methyladenosine","PALMITOLEIC ACID","MYRISTIC ACID","TAG56:3-FA16:0","TAG52:0-FA16:0")
+savdf=testtab[,c(foodsvis,compdlist)]
+worstfoodvec=rep(NA,times=nrow(savdf))
+for(foodhere in foodsvis){
+    worstfoodvec[which(savdf[,foodhere]==1)]=foodhere
+}
+savdf$carb_response_type=worstfoodvec
+savdf=savdf[,c("carb_response_type",compdlist)]
+savdf=savdf[!is.na(savdf[,2]),]

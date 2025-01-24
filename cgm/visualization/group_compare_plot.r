@@ -27,6 +27,9 @@ plot_df$rice_spiker=rownames(plot_df)%in%ricespikers
 plot_df_long=melt(plot_df,id=c("rice_spiker"))
 p<-ggplot(plot_df_long,aes(x=variable,y=value,fill=rice_spiker))+geom_boxplot()+xlab("mitigator tyeps")+ylab("mitigator effect")
 ggsave(paste0("rice_spiker_mitigator_effect_box.pdf"),plot=p)
+savdf=plot_df_long
+savdf=savdf[!is.na(savdf[,"value"]),]
+write.table(savdf,file="fig4g.txt",row.names=FALSE)
 # t.test 
 p_asso_vec=c()
 for(col in colnames(mat_mitigator_effect)){
@@ -88,6 +91,7 @@ stat_df$rice_peaks=ifelse(stat_df$rice_spiker,"spiker","non-spiker")
 n_df_ch=as.data.frame(table(stat_df[,c("asian","rice_peaks")]))
 p<-ggplot(n_df_ch,aes(x=asian,y=Freq,fill=rice_peaks))+geom_bar(stat="identity",position="dodge")+ylab("number")
 ggsave(paste0("rice_spiker_ethnicity_freq.pdf"),plot=p)
+write.table(n_df_ch,file="fig2d.txt",row.names=FALSE)
 # mitigation effect bar(increase/decrease)
 plotdf=c()
 featureslist=colnames(mat_mitigator_effect)
@@ -98,3 +102,37 @@ for(feathere in featureslist){
 }
 p=ggplot(plotdf,aes(x=feature,y=value,fill=direction))+geom_bar(stat="identity",position="identity")
 ggsave(plot=p,filename=paste0(resdir,"mitigator_numb.pdf"),device="pdf")
+savdf=plotdf
+savdf[,"direction"]=ifelse(savdf[,"direction"]=="posi","increase","decrease")
+write.table(savdf,file="fig4f.txt",row.names=FALSE)
+# num test 
+numcols=c("a1c_avg_all","fbg_avg_all","insulin_fasting_avg_all","bmi_avg_all","systolic_avg_all","diastolic_avg_all","fructosamine_avg_all","cholesterol_total_avg_all","ldl_avg_all","hdl_avg_all","modified_DI_heyjun","ffa_avg_heyjun","sspg_avg_all","ie_heyjun","hepatic_IR_heyjun")
+stat_df=metadatashow_plot[,numcols]
+vec_spiker=rep(NA,times=dim(mat_worstfood)[1])
+for(spiker in colnames(mat_worstfood)){
+    vec_spiker[mat_worstfood[,spiker]==1]=spiker
+}
+stat_df$spiker=vec_spiker
+stat_df_long=melt(stat_df,id=c("spiker"),na.rm=TRUE)
+pvec=c()
+variables=unique(stat_df_long[,"variable"])
+for(var in variables){
+    loctab=stat_df_long[stat_df_long[,"variable"]==var,]
+    loctab=loctab[!is.na(loctab[,"value"]),]
+    aovtest=aov(value~spiker,loctab)
+    pvec=c(pvec,summary(aovtest)[[1]][["Pr(>F)"]][1])
+}
+names(pvec)=variables
+pvec=p.adjust(pvec,method="fdr")
+save(pvec,file="screen_p_num.RData")
+# 
+pvec=c()
+stat_df$asian=ifelse(metadatashow_plot$ethnicity=="Asian","Asian","non-Asian")
+foodslist=c("Pasta","Grapes","Rice","Bread","Potatoes")
+for(spiker in foodslist){
+    fres=fisher.test(x=as.factor(stat_df[,"asian"]),y=ifelse(stat_df[,"spiker"]==spiker,"spiker","nospiker"))
+    pvec=c(pvec,fres[["p.value"]])
+}
+names(pvec)=foodslist
+pvec=p.adjust(pvec,method="fdr")
+save(pvec,file="screen_p_ethnicity.RData")

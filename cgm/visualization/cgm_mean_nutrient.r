@@ -36,12 +36,15 @@ corr_mat=matrix(NA,nrow=length(features),ncol=length(nutri_comp))
 colnames(corr_mat)=nutri_comp
 rownames(corr_mat)=features
 p_mat=corr_mat
+ci_mat=corr_mat
 for(feat in features){
     for(compo in nutri_comp){
         if(compo!="type"){
-            corres=cor.test(x=tabmerg[,feat],y=tabmerg[,compo],method="spearman")
-            corr_mat[feat,compo]=corres$estimate
-            p_mat[feat,compo]=corres$p.value
+            # corres=cor.test(x=tabmerg[,feat],y=tabmerg[,compo],method="spearman")
+            corres=correlation(as.data.frame(cbind(tabmerg[,feat],tabmerg[,compo])),method="spearman")
+            corr_mat[feat,compo]=corres$rho
+            p_mat[feat,compo]=corres$p
+            ci_mat[feat,compo]=paste0(corres$CI_low,"_",corres$CI_high)
         }else{
             locdf=tabmerg[,c(feat,compo)]
             colnames(locdf)=c("y","type")
@@ -52,6 +55,7 @@ for(feat in features){
     }
 }
 colnames(corr_mat)[length(nutri_comp)]="type_starch"
+colnames(p_mat)[length(nutri_comp)]="type_starch"
 pdf("heatmap_feature_nutrient.pdf")
 print(Heatmap(corr_mat,cluster_rows=FALSE,cluster_columns=FALSE,
 cell_fun=function(j,i,x,y,w,h,fill){
@@ -67,3 +71,12 @@ dim(padjvec)=dim(p_mat)
 rownames(padjvec)=rownames(p_mat)
 colnames(padjvec)=colnames(p_mat)
 save(padjvec,p_mat,corr_mat,file="nutri_cor_foodmeanspike.RData")
+# 
+cordf=melt(corr_mat)
+colnames(cordf)=c("feature","nutrient","effect")
+pvdf=melt(p_mat)
+colnames(pvdf)=c("feature","nutrient","p-value")
+padjdf=melt(padjvec)
+colnames(padjdf)=c("feature","nutrient","p-adj")
+savedf=merge(cordf,pvdf,by=c("feature","nutrient"))
+savedf=merge(savedf,padjdf,by=c("feature","nutrient"))

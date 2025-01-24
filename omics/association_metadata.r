@@ -31,9 +31,11 @@ for(groupfeat in grouplist){
 }
 omics=names(omicslist_arra)
 stat_tab_list=list()
+list_pca=list()
 for(omic in omics){
     mat=as.data.frame(t(omicslist_arra[[omic]]))
     pca_res=prcomp(mat,center=FALSE)
+    list_pca[[omic]]=pca_res
     scores=pca_res$x
     # metadata reformat
     samples=rownames(mat)
@@ -78,8 +80,14 @@ for(omic in omics){
             stat_tab_list[[length(stat_tab_list)+1]]=data.frame(omics=omic,feature=numfeat,pc=pci,test="correlation",value=corr,pvalue=pval)
         }  
     }
+    if(omic!="proteomics"){
+        savdf=cbind(scores[,c(1,2)],meta_tranform_df[,c("sex.factor","hepatic_ir_3classes_heyjun")])
+        colnames(savdf)[3:4]=c("sex","hepatic_ir_classes")
+        write.table(savdf,file=paste0("figext6",omic,".txt"),row.names=FALSE)
+    }
 }
 stat_tab=Reduce(rbind,stat_tab_list)
+stat_tab$padj=p.adjust(stat_tab[,"pvalue"],method="fdr")
 save(stat_tab,file=paste0(resdir,"assoc_stat.RData"))
 # heatmap of correlations with PC 1 and 2 in metabolomics and lipidomics
 tab_cor=stat_tab[stat_tab[,"test"]=="correlation"&stat_tab[,"omics"]%in%c("metabolomics","lipidomics"),]
@@ -104,3 +112,14 @@ print(Heatmap(cormat,name="spec",cluster_columns=FALSE,cluster_rows=FALSE,show_r
         }
 ))
 dev.off()
+# loading plot
+featlist=list("metabolomics"=annolist[["metabolomics"]][,"Compound.name"],"lipidomics"=annolist[["lipidomics"]][,"Compound.name"],"proteomics"=annolist[["proteomics"]][,"UniProt"])
+for(omic in names(list_pca)){
+    pca_res=list_pca[[omic]]
+    featname=featlist[[omic]]
+    loadingmat=pca_res$rotation
+    rownames(loadingmat)=featname
+    ind=order(abs(loadingmat[,1]),decreasing=TRUE)
+    barplot(loadingmat[ind[1:50],1])
+    # fviz_contrib(pca_res, choice="var", axes=1,top=10)
+}

@@ -136,6 +136,28 @@ print(Heatmap(cormat_subp,name="spec",cluster_columns=TRUE,cluster_rows=TRUE,sho
         }
 ))
 dev.off()
+pdf(paste0("spec_morethan1_subpheno_padj.pdf"))
+cormat_subp=cormat[subphenogrp,]
+pmat_subp=pmat[subphenogrp,]
+pmat_subp_fdr=p.adjust(c(pmat_subp),method="fdr")
+dim(pmat_subp_fdr)=dim(pmat_subp)
+rownames(pmat_subp_fdr)=rownames(pmat_subp)
+colnames(pmat_subp_fdr)=colnames(pmat_subp)
+print(Heatmap(cormat_subp,name="spec",cluster_columns=TRUE,cluster_rows=TRUE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun,
+    cell_fun=function(j,i,x,y,w,h,fill){
+            if(pmat_subp[i,j]<0.05){
+                if(pmat_subp_fdr[i,j]<0.2){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
+            }
+        }
+))
+dev.off()
+savdf=t(cormat_subp)
+colnames(savdf)=str_remove(string=colnames(savdf),pattern="(\\_avg\\_all)|(\\_COLPATTERNS)")
+write.table(savdf,file=paste0("fig5d.txt"))
 # Lachnospiraceae family corrleaiton plot
 allfeat=colnames(micromat)
 f_mask=str_detect(string=allfeat,pattern="f\\_\\_Lachnospiraceae")
@@ -160,13 +182,21 @@ for(featg in feature_spec){
     }
 }
 pmat[is.na(pmat)]=1
+pmat_fdr=p.adjust(c(pmat),method="fdr")
+dim(pmat_fdr)=dim(pmat)
+rownames(pmat_fdr)=rownames(pmat)
+colnames(pmat_fdr)=colnames(pmat)
 colnames(cormat)=str_remove(string=colnames(cormat),pattern="^.+g\\_\\_")
 col_fun=colorRamp2(c(-1,0,1),c("blue","white","red"))
 pdf(paste0("Lachnospiraceae_each_genera.pdf"))
 print(Heatmap(cormat,name="genera",cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun,
     cell_fun=function(j,i,x,y,w,h,fill){
             if(pmat[i,j]<0.05){
-                grid.text("*",x,y)
+                if(pmat_fdr[i,j]<0.2){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
             }
         }
 ))
@@ -191,13 +221,21 @@ for(featg in feature_spec){
     }
 }
 pmat[is.na(pmat)]=1
+pmat_fdr=p.adjust(c(pmat),method="fdr")
+dim(pmat_fdr)=dim(pmat)
+rownames(pmat_fdr)=rownames(pmat)
+colnames(pmat_fdr)=colnames(pmat)
 colnames(cormat)=str_remove(string=colnames(cormat),pattern="^.+s\\_\\_")
 col_fun=colorRamp2(c(-1,0,1),c("blue","white","red"))
 pdf(paste0("Lachnospiraceae_select_species.pdf"))
 print(Heatmap(cormat,name="spec",cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun,
     cell_fun=function(j,i,x,y,w,h,fill){
             if(pmat[i,j]<0.05){
-                grid.text("*",x,y)
+                if(pmat_fdr[i,j]<0.3){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
             }
         }
 ))

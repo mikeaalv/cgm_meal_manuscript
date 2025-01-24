@@ -53,6 +53,22 @@ def plot_bar_with_error(df, x_col, y_col, title, xlabel, ylabel,  save_fig=False
     else:
         plt.show()
     plt.clf()
+    length=len(means)
+    datasv=pd.DataFrame(data={'feature': np.repeat(y_col,length),'mean':means,'se2':errors})
+    if y_col=='relative_peak':
+        datasv.to_csv('figext2a_'+y_col+'.csv')
+        datasv2=datasv[datasv.index.isin(['Rice','Rice+Fat','Rice+Fiber','Rice+Protein'])]
+        datasv2.to_csv('fig4b_'+y_col+'.csv')
+    elif y_col=='AUC_above_baseline':
+        datasv2=datasv[~datasv.index.isin(['Rice+Fat','Rice+Fiber','Rice+Protein'])]
+        datasv2.to_csv('fig1c_'+y_col+'.csv')
+    elif y_col=='time_to_peak':
+        datasv2=datasv[~datasv.index.isin(['Rice+Fat','Rice+Fiber','Rice+Protein'])]
+        datasv2.to_csv('fig1c_'+y_col+'.csv')
+        datasv2=datasv[datasv.index.isin(['Rice','Rice+Fat','Rice+Fiber','Rice+Protein'])]
+        datasv2.to_csv('fig4b_'+y_col+'.csv')
+    else:
+        datasv.to_csv('figext2a_'+y_col+'.csv')
 
 data_plot=data[data['foods'].isin(plotfoods)]
 plot_bar_with_error(data_plot,'foods','time_to_peak','Time_to_peak Per Food','Foods','Time to peak',save_fig=True,fig_name = 'Time_to_peak_Per_Food.pdf')
@@ -80,6 +96,9 @@ def scatter_plot(df, x_column, y_column, color_column, save_fig=False, fig_name=
     else:
         plt.show()
     plt.clf()
+    df2=df[[x_column,y_column,color_column]]
+    df2=df2.dropna()
+    df2.to_csv('figext2b_'+x_column+y_column+'.csv',index=False)
 
 scatter_plot(data[(data['mitigator'].isna())&(data['foods'].isin(['Rice','Beans','Berries']))], 'time_to_peak', 'relative_peak','foods', save_fig=True, fig_name = 'Scatterplot_peak_and_time_to_peak.pdf')
 scatter_plot(data[(data['mitigator'].isna())&(data['foods'].isin(['Rice','Beans','Berries']))], 'slope_baseline_to_peak', 'relative_peak','foods', save_fig=True, fig_name = 'Scatterplot_peak_and_slope.pdf')
@@ -107,6 +126,7 @@ def plot_food_heatmap(df,features, fig_name = 'default.png'):
     sns.heatmap(normalized_df.loc[sorted_index], cmap='coolwarm')
     plt.savefig(fig_name,format="pdf",bbox_inches='tight')
     plt.clf()
+    normalized_df[normalized_df.index.isin(['Beans','Berries','Bread','Grapes','Pasta','Potatoes','Rice'])].to_csv('fig1d.csv')
 
 featuresele=['AUC','AUC_above_140','AUC_above_180','relative_peak','time_to_peak','AUC_above_baseline','deltaG_at_60_mins','deltaG_at_120_mins','deltaG_at_170_mins','return_to_baseline_time','slope_baseline_to_peak']
 

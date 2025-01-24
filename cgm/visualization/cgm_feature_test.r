@@ -58,8 +58,8 @@ for(foodthe in mitig_comb){
     }
 }
 stat_coll_pair_padj=c()
-for(foodthe in mitig_comb){
-    subtab=stat_coll_pair[stat_coll_pair[,"foods"]==foodthe,]
+for(feature in unique(stat_coll_pair[,"feature"])){
+    subtab=stat_coll_pair[stat_coll_pair[,"feature"]==feature,]
     subtab$padj=p.adjust(subtab$pval,method="fdr")
     stat_coll_pair_padj=rbind(stat_coll_pair_padj,subtab)
 }

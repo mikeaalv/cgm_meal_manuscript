@@ -61,11 +61,19 @@ for(feat in featlist){
         p_mat[feat,mitigi]=corres$p.value
     }
 }
+pmat_fdr=p.adjust(c(p_mat),method="fdr")
+dim(pmat_fdr)=dim(p_mat)
+rownames(pmat_fdr)=rownames(p_mat)
+colnames(pmat_fdr)=colnames(p_mat)
 pdf(paste0("heatmap_mitigatoreffect_metadata.AUC_above_baseline.pdf"))
 print(Heatmap(cor_mat,name="correlation with metadata",cluster_columns=FALSE,cluster_rows=TRUE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun,
     cell_fun=function(j,i,x,y,w,h,fill){
             if(p_mat[i,j]<0.05){
-                grid.text("*",x,y)
+                if(pmat_fdr[i,j]<0.1){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
             }
         }
 ))
@@ -102,11 +110,19 @@ for(feat in featlist){
         p_mat[feat,mitigi]=corres$p.value
     }
 }
+pmat_fdr=p.adjust(c(p_mat),method="fdr")
+dim(pmat_fdr)=dim(p_mat)
+rownames(pmat_fdr)=rownames(p_mat)
+colnames(pmat_fdr)=colnames(p_mat)
 pdf(paste0("heatmap_spikequantile_metadata.AUC_above_baseline.pdf"))
 print(Heatmap(cor_mat,name="correlation with metadata",cluster_columns=FALSE,cluster_rows=TRUE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun,
     cell_fun=function(j,i,x,y,w,h,fill){
             if(p_mat[i,j]<0.05){
-                grid.text("*",x,y)
+                if(pmat_fdr[i,j]<0.1){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
             }
         }
 ))

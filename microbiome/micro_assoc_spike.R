@@ -56,7 +56,7 @@ for(subj in subjects){
 summfeat_list[["alpha_div"]]=alphafeat
 micromat=cbind(micromat,addmat)
 # correlation result table 
-obslist=c("go","kegg","pathway","pfam","rxn","species_abs_g","alpha_div")
+obslist=c("go","kegg","pathway","pfam","rxn","species_abs_g","alpha_div","species_abs_s")
 tabstat_cor=c()
 wvec=weighttab[match(rownames(micromat),weighttab[,"subject_id"]),"meanw"]
 # 
@@ -74,7 +74,7 @@ for(classele in foodtypes){
         }
         features=summfeat_list[[typ]]
         # select features
-        if(!(typ%in%c("species_abs_g","alpha_div"))){
+        if(!(typ%in%c("species_abs_g","species_abs_s","alpha_div"))){
             misvec=missing_ratio_list[[typ]]
             pertvec=avg_perc_list[[typ]]
             features=intersect(names(misvec)[misvec<0.5],features)
@@ -114,16 +114,34 @@ rownamevec[notnaind]=idmattab[,2]
 rownames(cor_mat_sele)=rownamevec
 rownames(p_mat_sele)=rownamevec
 # 
+p_mat_sele_fdr=matrix(1,nrow=length(rownamevec),ncol=dim(mat_quantile)[2])
+rownames(p_mat_sele_fdr)=rownamevec
+colnames(p_mat_sele_fdr)=colnames(cor_mat_sele)
+for(foods in colnames(cor_mat_sele)){
+    for(feat in rownamevec){
+        padj=tabstat_cor[tabstat_cor[,"feature"]==feat&tabstat_cor[,"spikes"]==foods,"padj"]
+        if(length(padj)>0){
+            p_mat_sele_fdr[feat,foods]=padj
+        }
+    }
+}
+#
 col_fun=colorRamp2(c(-1,0,1),c("blue","white","red"))
 pdf(paste0("heatmap_spike_micro_padjcut.pdf"))#,width=10,height=20
 print(Heatmap(cor_mat_sele,name="correlation with micro",cluster_columns=TRUE,cluster_rows=TRUE,show_row_names=TRUE,show_column_names=TRUE,col=col_fun,
     cell_fun=function(j,i,x,y,w,h,fill){
             if(p_mat_sele[i,j]<0.05){
-                grid.text("*",x,y)
+                if(p_mat_sele_fdr[i,j]<0.2){
+                    grid.text("**",x,y)
+                }else{
+                    grid.text("*",x,y)
+                }
             }
         }
 ))
 dev.off()
+savdf=cor_mat_sele
+write.table(savdf,file=paste0("figext7.txt"))
 # plot pathways among species 
 thres_sele=0.05
 feature_spec_species=c()

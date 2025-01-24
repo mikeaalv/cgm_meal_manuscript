@@ -37,8 +37,13 @@ for(tp in timep){
         mask1=tab[,"food_rep"]==fr
         tab[mask1,"amount"]=tab[mask1,"amount"]/tab[mask1&mask2,"amount"]
     }
-    p<-ggboxplot(tab[tab[,"starchtype"]=="RS",],x="food",y="amount",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE,method="t.test",p.adjust.method="none")+xlab("foods")+ylab("RS ratio")
+    p<-ggboxplot(tab[tab[,"starchtype"]=="RS",],x="food",y="amount",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE,method="t.test")+xlab("foods")+ylab("RS ratio")#,p.adjust.method="none"
     ggsave(paste0("RS_ratio_",tp,".pdf"),plot=p)
-    p<-ggboxplot(tab[tab[,"starchtype"]=="SDS",],x="food",y="amount",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE,method="t.test",p.adjust.method="none")+xlab("foods")+ylab("SDS ratio")
+    p<-ggboxplot(tab[tab[,"starchtype"]=="SDS",],x="food",y="amount",add="jitter")+stat_compare_means(comparisons=comparisons,label="p.signif",hide.ns=TRUE,method="t.test")+xlab("foods")+ylab("SDS ratio")#,p.adjust.method="none"
     ggsave(paste0("SDS_ratio_",tp,".pdf"),plot=p)
+    if(tp=="after"){
+        savdf=tab[tab[,"starchtype"]=="RS"|tab[,"starchtype"]=="SDS",c("food","rep","starchtype","amount")]
+        colnames(savdf)[dim(savdf)[2]]="ratio"
+        write.table(savdf,file=paste0("figext5.txt"))
+    }
 }

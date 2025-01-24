@@ -151,6 +151,9 @@ for(chfeat in checkfeats){
     pdf(paste0("heatmap_food_all.",chfeat,".pdf"))
     draw(h_3feat + h_worstfood + h_food_quantile + h_mitigator,main_heatmap="3featfood")
     dev.off()
+    datavec=colSums(mat_worstfood)
+    savedf=data.frame(food=names(datavec),count=datavec)
+    write.table(savedf,file=paste0("fig2c_",chfeat,".txt"),row.names=FALSE)
     # heatmap original order
     h_3feat_anno_full=HeatmapAnnotation(feature=rep(featlist_intr,each=length(fullfoodlist)),annotation_name_side="left")
     h_3feat_2=Heatmap(featfullmat_full,name="3featfood2",cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=TRUE,show_column_names=FALSE,row_names_side="left",top_annotation=h_3feat_anno_full)#

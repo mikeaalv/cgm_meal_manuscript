@@ -158,6 +158,9 @@ h_food_quantile=Heatmap(mat_quantile,name="food_quantile",cluster_columns=FALSE,
 pdf(paste0("heatmap_food_all.pdf"))
 draw(h_3feat + h_worstfood + h_food_quantile + h_mitigator,main_heatmap="3featfood")
 dev.off()
+datavec=colSums(mat_worstfood)
+savedf=data.frame(food=names(datavec),count=datavec)
+write.table(savedf,file="fig2c_delta_glucose_peak.txt",row.names=FALSE)
 # heatmap original order
 h_3feat_anno_full=HeatmapAnnotation(feature=rep(featlist_intr,each=length(fullfoodlist)),annotation_name_side="left")
 h_3feat_2=Heatmap(featfullmat_full,name="3featfood2",cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=TRUE,show_column_names=FALSE,row_names_side="left",top_annotation=h_3feat_anno_full)#
@@ -317,6 +320,9 @@ for(center_gr in names(comp_feat_list)){
         ggsave(plot=p,paste0(resdir,"boxplot_spiketype_meta",colfeat,"_compare_",center_gr,"unscale.pdf"))
     }
 }
+savdf=plotdf[,c("worstfood","fbg_avg_all","sspg_avg_all","systolic_avg_all")]
+colnames(savdf)=c("Carb-response-types","FBG","SSPG","Systolic bp")
+write.table(savdf,file="fig3c.txt",row.names=FALSE)
 # test whether is asian vs rice spiker
 testtab=plotdf[,c("worstfood","ethnicity")]
 testtab$ricespiker=testtab[,"worstfood"]=="Rice"
@@ -337,6 +343,7 @@ h_food_quantile_corr=Heatmap(corr_mat_quantile,name="food_quantile_corr",cluster
 pdf(paste0("heatmap_corr_food_mitigator.pdf"))
 draw(h_food_quantile_corr,main_heatmap="food_quantile_corr")
 dev.off()
+write.table(corr_mat_quantile,file="fig2a.txt")
 # spike comparison between metabolic subtypes
 sumtab_quan=as.data.frame(sumtab_quan)
 mat_peak=matrix(NA,nrow=length(subjects),ncol=length(food_list_carbs))
@@ -409,6 +416,11 @@ for(subtcol in subtyvec){
         ggsave(plot=p,paste0(resdir,"boxplot_metabotype_meta",food,"_compare_",subtcol,".pdf"))
     }
 }
+savdf=plotdf[,c("sspg_status_heyjun","DI_status_heyjun","Potatoes","Pasta")]
+colnames(savdf)=c("insulin resistance","beta cell function","Potatoes","Pasta")
+savdf[savdf[,"beta cell function"]=="BC_inter"&!is.na(savdf[,"beta cell function"]),"beta cell function"]=NA
+savdf=savdf[!(is.na(savdf[,"insulin resistance"])&is.na(savdf[,"beta cell function"])),]
+write.table(savdf,file="fig3b.txt",row.names=FALSE)
 # potato vs grapes
 plotdf$potatovsgrapes=plotdf$Potatoes/plotdf$Grapes
 plotdf2=plotdf[!is.na(plotdf[,"sspg_status_new"]),]
@@ -533,6 +545,11 @@ for(subtcol in subtyvec){
         )
         p<-ggplot(cdata,aes(x=foods,y=mean,fill=subtype))+geom_bar(stat="identity",position="dodge",width=0.2)+geom_errorbar(aes(ymin=mean-2*se,ymax=mean+2*se),position=position_dodge(.9),width=0.2)+geom_point(data=loctab,aes(x=foods,y=value),position=position_jitter(seed=1,width=0.1))+facet_wrap(~subtype,ncol=1,scales="free")+ylab(feature)+theme_bw()+theme(axis.line=element_line(colour="black"),panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_blank(),panel.background=element_blank()) 
         ggsave(paste0(subtcol,feature,"mitigation.pdf"),plot=p)
+        if(feature=="peak_relative"){
+            savdf=loctab[,c("value","foods","subtype")]
+            savdf=savdf[savdf[,"subtype"]!="BC_inter",]
+            write.table(savdf,file=paste0("fig4d",subtcol,".txt"),row.names=FALSE)
+        }
     }
 }
 stat_coll_pair=stat_coll_pair[stat_coll_pair[,"group"]!="BC_inter",]
@@ -542,8 +559,8 @@ for(subtcol in subtyvec){
     sublistv=plotdf2[,subtcol]
     sublistuniq=unique(sublistv)
     for(subg in sublistuniq){
-        for(foodthe in mitig_comb){
-            subtab=stat_coll_pair[stat_coll_pair[,"foods"]==foodthe&stat_coll_pair[,"category"]==subtcol&stat_coll_pair[,"group"]==subg,]
+        for(feature in unique(stat_coll_pair[,"feature"])){
+            subtab=stat_coll_pair[stat_coll_pair[,"feature"]==feature&stat_coll_pair[,"category"]==subtcol&stat_coll_pair[,"group"]==subg,]
             subtab$padj=p.adjust(subtab$pval,method="fdr")
             stat_coll_pair_adj=rbind(stat_coll_pair_adj,subtab)
         }

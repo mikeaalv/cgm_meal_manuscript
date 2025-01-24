@@ -55,6 +55,10 @@ mask2=contains(food_and_metigator_vec,'Rice');
 colors={'b','r','g','y'};
 colorlabels={'Rice','Rice+Fat','Rice+Fiber','Rice+Protein'};
 subject_vec=arrayfun(@num2str,subject_vec,'UniformOutput',false);
+CGMvalue=[];
+Timevalue=[];
+Foodtypes=[];
+Subjects=[];
 for subj=unique(subject_vec)
     subj=subj{1};
     mask1=strcmp(subject_vec,subj);
@@ -70,6 +74,12 @@ for subj=unique(subject_vec)
         p=plot(timvecsort,matloc(:,submask),colors{strcmp(colorlabels,comb)},'LineWidth',2);
         hlist{i}=p(1);
         i=i+1;
+        valflaten=matloc(:,submask);
+        valflaten=valflaten(:);
+        CGMvalue=[CGMvalue; valflaten];
+        Timevalue=[Timevalue; repmat(timvecsort,[sum(submask),1])];
+        Foodtypes=[Foodtypes; repmat({comb},[length(valflaten),1])];
+        Subjects=[Subjects; repmat({subj},[length(valflaten),1])];
     end
     legend([hlist{:}],unique(foodsloca));
     title(subj);
@@ -81,6 +91,16 @@ for subj=unique(subject_vec)
 end
 % 
 close all;
+colltab=table(CGMvalue,Timevalue,Foodtypes,Subjects);
+idtab=readtable('/Users/yuewu/Library/CloudStorage/Box-Box/Yue Wu''s Files/cgm_meal_project/share/datasharing/idmatch.txt','Format','auto');
+idtab{:,'oldid'}=replace(idtab{:,'oldid'},"STUDYID-","");
+idtab.oldid=str2double(idtab{:,'oldid'});
+colltab.Subjects=str2double(colltab{:,'Subjects'});
+[~,indmat]=ismember(colltab{:,'Subjects'},idtab{:,'oldid'});
+colltab{:,'Subjects'}=idtab{indmat,'newid'};
+colltab=colltab(ismember(colltab{:,'Subjects'},[33,18,14,48]),:);
+writetable(colltab,'fig4e.txt','WriteRowNames',true);
+% 
 subj_uniq_vec=unique(subject_vec);
 [~,ind]=sort(str2double(subj_uniq_vec));
 subj_uniq_vec=subj_uniq_vec(ind);
@@ -103,6 +123,10 @@ close all;
 colorlabels={'Rice','Potatoes','Pasta','Grapes','Bread','Berries','Beans'};
 colors=hsv(length(colorlabels));
 mask2=ismember(food_and_metigator_vec,colorlabels);
+CGMvalue=[];
+Timevalue=[];
+Foodtypes=[];
+Subjects=[];
 for subj=unique(subject_vec)
     subj=subj{1};
     mask1=strcmp(subject_vec,subj);
@@ -118,6 +142,12 @@ for subj=unique(subject_vec)
         p=plot(timvecsort,matloc(:,submask),'Color',colors(strcmp(colorlabels,comb),:),'LineWidth',2);
         hlist{i}=p(1);
         i=i+1;
+        valflaten=matloc(:,submask);
+        valflaten=valflaten(:);
+        CGMvalue=[CGMvalue; valflaten];
+        Timevalue=[Timevalue; repmat(timvecsort,[sum(submask),1])];
+        Foodtypes=[Foodtypes; repmat({comb},[length(valflaten),1])];
+        Subjects=[Subjects; repmat({subj},[length(valflaten),1])];
     end
     legend([hlist{:}],unique(foodsloca));
     title(subj);
@@ -127,6 +157,13 @@ for subj=unique(subject_vec)
 end
 % 
 close all;
+colltab=table(CGMvalue,Timevalue,Foodtypes,Subjects);
+colltab.Subjects=str2double(colltab{:,'Subjects'});
+[~,indmat]=ismember(colltab{:,'Subjects'},idtab{:,'oldid'});
+colltab{:,'Subjects'}=idtab{indmat,'newid'};
+colltab=colltab(ismember(colltab{:,'Subjects'},[99,28,87,31,18]),:);
+writetable(colltab,'fig2b.txt','WriteRowNames',true);
+% 
 subj_uniq_vec=unique(subject_vec);
 [~,ind]=sort(str2double(subj_uniq_vec));
 subj_uniq_vec=subj_uniq_vec(ind);
@@ -325,6 +362,9 @@ h=figure();
 hold on;
 hlist={};
 i=1;
+CGMvalue=[];
+Timevalue=[];
+Foodtypes=[];
 for foodc=colorlabels
     foodc=foodc{1};
     food_ind=strcmp(foodsele,foodc);
@@ -334,11 +374,20 @@ for foodc=colorlabels
     p=plot(timvecsort,meanvec,'Color',colors(styleid,:),'LineWidth',2,'LineStyle',linelabels(styleid));
     hlist{i}=p(1);
     i=i+1;
+    CGMvalue=[CGMvalue; meanvec];
+    Timevalue=[Timevalue; timvecsort];
+    Foodtypes=[Foodtypes; repmat({foodc},[length(meanvec),1])];
 end
 legend([hlist{:}],colorlabels);
 saveas(h,[workdir,'curv.mean.fig']);
 close all;
+colltab=table(CGMvalue,Timevalue,Foodtypes)
+% writetable(colltab,'fig1b4a.txt','WriteRowNames',true);
 % individual food curve with confidence interval
+CGMvalue=[];
+Timevalue=[];
+Foodtypes=[];
+sevalue=[];
 t=tiledlayout(3,4);
 for foodc=colorlabels
     foodc=foodc{1};
@@ -357,6 +406,18 @@ for foodc=colorlabels
     plot(timvecsort,meanvec,'LineWidth',2);
     title(foodc);
     ylim([80 170]);
+    CGMvalue=[CGMvalue; meanvec];
+    Timevalue=[Timevalue; timvecsort];
+    Foodtypes=[Foodtypes; repmat({foodc},[length(meanvec),1])];
+    sevalue=[sevalue; ste];
 end
 saveas(t,[workdir,'curv.allfood.fig']);
 close all;
+colltab=table(CGMvalue,Timevalue,Foodtypes,sevalue);
+writetable(colltab,'figext1.txt','WriteRowNames',true);
+colltab1b=colltab(~ismember(colltab{:,'Foodtypes'},{'Rice+Fat','Rice+Fiber','Rice+Protein'}),:);
+colltab1b=colltab1b(:,{'CGMvalue','Timevalue','Foodtypes'});
+writetable(colltab1b,'fig1b.txt','WriteRowNames',true);
+colltab4a=colltab(ismember(colltab{:,'Foodtypes'},{'Rice','Rice+Fat','Rice+Fiber','Rice+Protein'}),:);
+colltab4a=colltab4a(:,{'CGMvalue','Timevalue','Foodtypes'});
+writetable(colltab4a,'fig4a.txt','WriteRowNames',true);

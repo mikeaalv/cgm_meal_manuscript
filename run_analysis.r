@@ -96,3 +96,11 @@ sys.source(paste0(pathdir,"omics/subtype_spike_pcorr.r"),ee)
 
 # food analysis
 sys.source(paste0(pathdir,"foodana/starch_comp.r"),ee)
+
+# additional analysis reviwers
+# reproduce ratio of each replicate
+sys.source(paste0(pathdir,"cgm/visualization/foodtype_var.r"),ee)
+# sex differences in ppgr
+sys.source(paste0(pathdir,"cgm/visualization/stat_ppgr_sex_check.r"),ee)
+# inter vs intra individual variances
+sys.source(paste0(pathdir,"cgm/visualization/ppgr_icc.r"),ee)
