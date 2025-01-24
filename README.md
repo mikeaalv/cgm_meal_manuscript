@@ -18,4 +18,4 @@ Please refer to the [supplementary files](To be added soon) for the R and Python
 Please clone the code and run.
 
 ## Demo
-We provide a demo on CGM processing and feature extraction. The CGM data can be found [here](To be added soon). The user can run `cgm/preprocessing/preprocess.r`, `cgm/feature_extraction/manual_feature.py`, and `cgm/visualization/figures_cgm_features.py` in order to preprocess and smooth the CGM, extract CGM features, and visualize the features. The final figures can be compared with Figure 1 and S3. Required time for downloading and running should be brief.
+We provide a demo on CGM processing and feature extraction. The processed and smoothed CGM data can be found [here](To be added soon). The user can run `cgm/feature_extraction/manual_feature.py` and `cgm/visualization/figures_cgm_features.py` in order to extract CGM features and visualize the features. Required time for downloading and running should be brief.
