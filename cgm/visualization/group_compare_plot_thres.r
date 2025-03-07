@@ -1,4 +1,4 @@
-# compare finding related groups of spikers, etc
+# compare finding related groups of spikers carb-response-types, etc (based on the quantile result)
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

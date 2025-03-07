@@ -1,3 +1,4 @@
+# PCA and association wiht metadata 
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

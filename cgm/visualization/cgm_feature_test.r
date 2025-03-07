@@ -1,3 +1,4 @@
+# groupwise t-test of CGM features
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

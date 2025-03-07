@@ -1,4 +1,4 @@
-# partial correlation 
+# partial correlation between clinical data and omics
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

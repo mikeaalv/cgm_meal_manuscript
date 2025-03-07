@@ -1,3 +1,4 @@
+# the enrichment function for lipidomics
 lipid_enrich<-function(query,universe){
     # code adapated from https://github.com/PNNL-Comp-Mass-Spec/Rodin/blob/master/Example%20script/Example_of_use_target_list_mode.R
     cleanedquery=clean.lipid.list(query)

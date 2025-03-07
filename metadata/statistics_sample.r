@@ -1,4 +1,4 @@
-# number of samples and features for all data sets
+# number of samples and features for all datasets
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

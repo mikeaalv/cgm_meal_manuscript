@@ -1,3 +1,4 @@
+# batch run of linear model with covariates
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

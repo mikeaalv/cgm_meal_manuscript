@@ -1,3 +1,4 @@
+# pathway enrichment of negatively and positively correlated features with PPGR
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

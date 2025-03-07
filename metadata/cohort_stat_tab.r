@@ -1,4 +1,4 @@
-# number of samples and features for all data sets
+# summary statistic table
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

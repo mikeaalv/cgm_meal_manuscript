@@ -1,4 +1,4 @@
-# groupwise test 
+# carb-response-type groupwise test of omics features
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

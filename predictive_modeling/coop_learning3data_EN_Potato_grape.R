@@ -1,3 +1,4 @@
+# model for GPratio
 # Load necessary libraries
 library(caret)
 library(glmnet)

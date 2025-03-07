@@ -1,3 +1,5 @@
+# carb-response-types, related plot, and statistic tests
+# expand for "AUC_above_baseline","glucose_at_120_mins","time_to_peak","peak_abs"
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

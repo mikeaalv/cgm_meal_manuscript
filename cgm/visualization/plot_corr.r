@@ -1,3 +1,4 @@
+# correlation pattern between clinical features and PPGR 
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)

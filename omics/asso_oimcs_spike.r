@@ -1,3 +1,4 @@
+# associaiton between omics and food spikes
 rm(list=ls())
 options(warn=1)
 options(stringsAsFactors=FALSE)
